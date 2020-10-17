@@ -9,10 +9,7 @@
 
 ;  NQTHM Version 1992
 
-(IN-PACKAGE "USER")
-
-(EVAL-WHEN (LOAD EVAL COMPILE)
-           (CHK-BASE-AND-PACKAGE-1992 10 *PACKAGE*))
+(in-package :nqthm)
 
 (DEFUN *1*ADD1 (X)
   (COND ((AND (INTEGERP X) (<= 0 X)) (1+ X))

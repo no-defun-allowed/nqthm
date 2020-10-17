@@ -1,0 +1,16 @@
+(asdf:defsystem :nqthm
+  :depends-on (:alexandria)
+  :serial t
+  :components ((:file "nqthm")
+               (:file "sloop")
+               (:file "basis")
+               (:file "genfact")
+               (:file "events")
+               (:file "code-1-a")
+               (:file "code-b-d")
+               (:file "code-e-m")
+               (:file "code-n-r")
+               (:file "code-s-z")
+               (:file "io")
+               (:file "ppr")
+               (:file "load")))

@@ -9,10 +9,10 @@
 
 ;  This file `nqthm.lisp' is the basic loader and compiler for our
 ;  theorem-prover.  To compile the system, after loading this file
-;  into a Common Lisp, invoke (IN-PACKAGE "USER") and then
+;  into a Common Lisp, invoke (IN-PACKAGE "NQTHM") and then
 ;  (COMPILE-NQTHM).  To build the system for execution, assuming
 ;  that it has been compiled and after loading this file, invoke
-;  (IN-PACKAGE "USER") and then (LOAD-NQTHM).  One can then proceed
+;  (IN-PACKAGE "NQTHM") and then (LOAD-NQTHM).  One can then proceed
 ;  to use BOOT-STRAP, PROVE-LEMMA, and the other commands described
 ;  in the manual.  For further guidance in case of problems, see the
 ;  installation guide chapter of the manual.
@@ -22,7 +22,7 @@
 ;  order to specify the directory on which the sources are located
 ;  and to which the objects are to be written.  For example, one
 ;  might wish to (SETQ *DEFAULT-NQTHM-PATH* ">usr>smith>nqthm>"),
-;  after invoking (IN-PACKAGE "USER").  For some implementations of
+;  after invoking (IN-PACKAGE "NQTHM").  For some implementations of
 ;  Common Lisp the default setting of NIL will cause the "current"
 ;  or "connected" directory to be used, which is ok provided that
 ;  the connected directory is the one with the sources and provided
@@ -39,38 +39,19 @@
 ;  For running in Common Lisps corresponding to CLTL2, we may create
 ;  the package USER.  We may also create SLOOP.
 
-(OR (FIND-PACKAGE "USER")
-    (MAKE-PACKAGE "USER" :USE (LIST (OR (FIND-PACKAGE "COMMON-LISP")
-                                        (FIND-PACKAGE "LISP")))))
+(defpackage :nqthm
+  (:use :cl))
+(defpackage :sloop
+  (:use :cl)
+  (:shadow #:type-error #:loop-finish))
 
-(OR (FIND-PACKAGE "SLOOP")
-    (PROGN (MAKE-PACKAGE "SLOOP" :USE (LIST (OR (FIND-PACKAGE "COMMON-LISP")
-                                                (FIND-PACKAGE "LISP"))))
-           (SHADOW 'TYPE-ERROR "SLOOP")
-           (SHADOW 'LOOP-FINISH "SLOOP")))
-
-(IN-PACKAGE "USER")
-
-(DEFUN CHK-BASE-AND-PACKAGE-1992 (BASE PACK)
-
-;  !!!  We use three exclamation marks to remind ourselves that a
-;  symbol is also defined elsewhere.  We have had some grief with
-;  Common Lisps that load files into the wrong package or with the
-;  wrong base, so we check these things every time that we load a
-;  file.
-
-  (OR (AND (EQL BASE (+ 1 1 1 1 1 1 1 1 1 1))
-           (EQ PACK (FIND-PACKAGE "USER")))
-      (ERROR "Wrong package or base.")))
-
-(CHK-BASE-AND-PACKAGE-1992 10 *PACKAGE*)
-
+(in-package :nqthm)
 ;  Here is how to set the directory from which all files are to be
 ;  loaded and to which files are to be printed.  The user is free to
 ;  set this variable.  Should be a string, e.g. "/usr/me/nqthm/", or
 ;  NIL.
 ;  !!!
-(DEFVAR *DEFAULT-NQTHM-PATH* NIL
+(defvar *default-nqthm-path* nil
   "IF not NIL, components from this will be used to extend pathnames.")
 
 ;  In compiling and loading this theorem-prover, we assume that the
@@ -80,7 +61,7 @@
 ;  this variable.  But if you do, you will of course need to rename
 ;  all of the *.lisp source files that come with this system, too.
 ;  !!!
-(DEFVAR FILE-EXTENSION-LISP "lisp")
+(defvar file-extension-lisp "lisp")
 
 ;  We have not found a mechanism that works across all Common Lisps for both
 ;  specifying the name for a compiled object file and for loading that file.
@@ -90,53 +71,52 @@
 ;  for FILE-EXTENSION-BIN in other Common Lisps, e.g.  (SETQ
 ;  FILE-EXTENSION-BIN "fasl").
 ;  !!!
-(DEFVAR FILE-EXTENSION-BIN NIL)
+(defvar file-extension-bin NIL)
 
 ;  Invoking (COMPILE-NQTHM) is all it takes to compile this
 ;  theorem-prover.  The order of compilation and loading is
 ;  significant; sloop, basis, genfact, and events define macros that
 ;  are used in later files.
-(DEFUN COMPILE-NQTHM ()
-  (FLET ((LF (N)
-             (LOAD (EXTEND-FILE-NAME N FILE-EXTENSION-BIN)))
-         (CF (N)
-             (COMPILE-FILE (EXTEND-FILE-NAME N FILE-EXTENSION-LISP))))
-        (PROCLAIM-NQTHM-FILES)
-        (CF "sloop")
-        (LF "sloop")
-        (CF "basis")
-        (LF "basis")
-        (CF "genfact")
-        (LF "genfact")
-        (CF "events")
-        (LF "events")
-        (CF "code-1-a")
-        (CF "code-b-d")
-        (CF "code-e-m")
-        (CF "code-n-r")
-        (CF "code-s-z")
-        (CF "io")
-        (CF "ppr")
-        ))
+(defun compile-nqthm ()
+  (flet ((lf (n)
+           (load (extend-file-name n file-extension-bin)))
+         (cf (n)
+           (compile-file (extend-file-name n file-extension-lisp))))
+    (proclaim-nqthm-files)
+    (cf "sloop")
+    (lf "sloop")
+    (cf "basis")
+    (lf "basis")
+    (cf "genfact")
+    (lf "genfact")
+    (cf "events")
+    (lf "events")
+    (cf "code-1-a")
+    (cf "code-b-d")
+    (cf "code-e-m")
+    (cf "code-n-r")
+    (cf "code-s-z")
+    (cf "io")
+    (cf "ppr")))
 
 ;  Invoking (LOAD-NQTHM) is all it takes to build a runnable version of
 ;  this theorem-prover, assuming that you have compiled it.
-(DEFUN LOAD-NQTHM ()
-  (FLET ((LF (N)
-             (LOAD (EXTEND-FILE-NAME N FILE-EXTENSION-BIN))))
+(defun load-nqthm ()
+  (flet ((lf (n)
+           (load (extend-file-name n file-extension-bin))))
 ; For speed on calls of built-in *1*functions:
-        (PROCLAIM-NQTHM-FILE "code-1-a") 
-        (LF "sloop")
-        (LF "basis")
-        (LF "genfact")
-        (LF "events")
-        (LF "code-1-a")
-        (LF "code-b-d")
-        (LF "code-e-m")
-        (LF "code-n-r")
-        (LF "code-s-z")
-        (LF "io")
-        (LF "ppr")))
+    (proclaim-nqthm-file "code-1-a") 
+    (lf "sloop")
+    (lf "basis")
+    (lf "genfact")
+    (lf "events")
+    (lf "code-1-a")
+    (lf "code-b-d")
+    (lf "code-e-m")
+    (lf "code-n-r")
+    (lf "code-s-z")
+    (lf "io")
+    (lf "ppr")))
 
 ;  With DEFUN we never define a function that returns multiple values;
 ;  at least we never look at any but the first value.  In some Lisps,
@@ -151,11 +131,10 @@
 ;  !!!
 (DEFVAR *NQTHM-MAKE-PROCLAMATIONS* T)
 
-(DEFUN PROCLAIM-NQTHM-FILES ()
-  (DOLIST
-      (NAME '("basis" "genfact" "events" "code-1-a" "code-b-d"
-                      "code-e-m" "code-n-r" "code-s-z" "io" "ppr"))
-    (PROCLAIM-NQTHM-FILE NAME)))
+(defun proclaim-nqthm-files ()
+  (dolist (name '("basis" "genfact" "events" "code-1-a" "code-b-d"
+                  "code-e-m" "code-n-r" "code-s-z" "io" "ppr"))
+    (proclaim-nqthm-file name)))
 
 ; About our use of PROCLAIM.  As a first approximation, proclaiming a function
 ; to take a certain number of arguments and return a certain number of values
@@ -176,21 +155,21 @@
 ; reproclaimed to have m/=n arguments?  Lucid seems to say no.  In the
 ; processing of different event files, functions may be redefined.
 
-(DEFUN PROCLAIM-NQTHM-FILE (NAME)
+(defun proclaim-nqthm-file (name)
 ; !!!
-  NIL
-  #+AKCL
-  (WITH-OPEN-FILE 
-      (FILE (EXTEND-FILE-NAME NAME FILE-EXTENSION-LISP)
-            :DIRECTION :INPUT)
-    (LET ((EOF (CONS NIL NIL))
-          (*READ-BASE* 10)
-          (*READTABLE* (COPY-READTABLE NIL))
-          (*PACKAGE* (FIND-PACKAGE "USER")))
-      (LOOP
-       (LET ((FORM (READ FILE NIL EOF)))
-         (COND ((EQ EOF FORM) (RETURN NIL))
-               ((MAKE-DECLARE-FORM FORM ))))))))
+  nil
+  #+akcl
+  (with-open-file 
+      (file (extend-file-name name file-extension-lisp)
+            :direction :input)
+    (let ((eof (cons nil nil))
+          (*read-base* 10)
+          (*readtable* (copy-readtable nil))
+          (*package* (find-package "NQTHM")))
+      (loop
+       (let ((form (read file nil eof)))
+         (cond ((eq eof form) (return nil))
+               ((make-declare-form form))))))))
 
 (DEFUN MAKE-DECLARE-FORM (FORM)
 ; !!!

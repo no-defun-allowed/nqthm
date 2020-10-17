@@ -36,7 +36,7 @@
         note="To appear in J. of Automated Reasoning")
 |#
 
-(IN-PACKAGE "USER")
+(in-package :nqthm)
 
 (EVAL-WHEN (LOAD EVAL COMPILE)
 	   (CHK-BASE-AND-PACKAGE-1992 10 *PACKAGE*))

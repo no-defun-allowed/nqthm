@@ -167,7 +167,7 @@ separated by parentheses and commas.
 ; `prove-lemma' is something that translate can accept.
 
 
-(IN-PACKAGE "USER")
+(in-package :nqthm)
 
 (EVAL-WHEN (LOAD EVAL COMPILE)
            (CHK-BASE-AND-PACKAGE-1992 10 *PACKAGE*))

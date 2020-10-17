@@ -1,5 +1,5 @@
 ;;; -*-  Mode: Lisp; Package: USER; Syntax: Common-Lisp; Base: 10 -*- ;;;;
-(IN-PACKAGE "USER")
+(in-package :nqthm)
 
 ;  Copyright (C) 1989-1994 by Robert S. Boyer, J Strother Moore, and
 ;  Computational Logic, Inc. All Rights Reserved.
@@ -240,45 +240,13 @@ Robert S. Boyer and J Strother Moore
 ;   compile the rest of the theorem-prover.
 
 
-;                               SANITY CHECK
-
-(EVAL-WHEN (LOAD EVAL COMPILE)
-
-#|  
-
-;   The following code is also found in nqthm.lisp.  It has been
-;   commented out here to avoid duplicate definitions.  But we leave
-;   the text in place so that the sources are complete even in the
-;   absence of nqthm.lisp (which we think of as an addendum to the
-;   system to help compile and load it).
-
-
-(DEFMACRO ITERATE (&REST L) `(SLOOP::SLOOP ,@ L))
-
-(DEFUN CHK-BASE-AND-PACKAGE-1992 (BASE PACK)
-
-;  We have had some grief with Common Lisps that load files into the
-;  wrong package or with the wrong base, so we check these things
-;  every time that we load a file.
-
-  (OR (AND (EQL BASE (+ 1 1 1 1 1 1 1 1 1 1))
-           (EQ PACK (FIND-PACKAGE "USER")))
-      (ERROR "Wrong package or base.")))
-
-|#
-
-(CHK-BASE-AND-PACKAGE-1992 10 *PACKAGE*))
-
-
 ;                       SUITABILITY OF THIS COMMON LISP
 
 
 ;   The system is written for an Ascii-based Common Lisp, and we now
 ;   check that we are in one.
 
-(EVAL-WHEN (COMPILE EVAL LOAD)
-
-(DEFCONSTANT PRINTING-COMMON-LISP-CHARACTERS
+(alexandria:define-constant PRINTING-COMMON-LISP-CHARACTERS
   '(#\!
     #\"
     #\# #\$ #\% #\& #\' #\( #\) #\* #\+ #\, #\- #\. #\/
@@ -290,16 +258,18 @@ Robert S. Boyer and J Strother Moore
     #\a #\b #\c #\d #\e #\f #\g #\h #\i #\j #\k #\l
     #\m #\n #\o #\p #\q #\r #\s #\t #\u #\v #\w #\x #\y #\z
     #\{ #\|
-    #\} #\~ ))
+    #\} #\~ )
+  :test #'equal)
 
-(DEFCONSTANT ASCII-CODES-FOR-PRINTING-COMMON-LISP-CHARACTERS
+(alexandria:define-constant ASCII-CODES-FOR-PRINTING-COMMON-LISP-CHARACTERS
   '(33 34 35 36 37 38 39 40 41 42 43 44 45 46 47
        48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63
        64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79
        80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95
        96 97 98 99 100 101 102 103 104 105 106 107 108
        109 110 111 112 113 114 115 116 117 118 119 120
-       121 122 123 124 125 126))
+       121 122 123 124 125 126)
+  :test #'equal)
 
 (DEFUN CHK-FOR-SUITABILITY-OF-THIS-COMMON-LISP ()
   #|
@@ -326,21 +296,19 @@ Robert S. Boyer and J Strother Moore
 ; types we must put the magic bit someplace else (like at
 ; the bottom).
 
-  (ITERATE FOR CHAR IN PRINTING-COMMON-LISP-CHARACTERS
-           AS N IN ASCII-CODES-FOR-PRINTING-COMMON-LISP-CHARACTERS
-           DO
-           (COND ((NOT (EQUAL N (CHAR-CODE CHAR)))
-                  (ERROR "This is not an ASCII-based Common Lisp ~
-                   because character ~A does not have code ~A."
-                         CHAR N)))))
+  (loop for char in printing-common-lisp-characters
+        for n    in ascii-codes-for-printing-common-lisp-characters
+        unless (= n (char-code char))
+          do (error "This is not an ASCII-based Common Lisp ~
+                     because character ~A does not have code ~A."
+                    char n)))
 
-(CHK-FOR-SUITABILITY-OF-THIS-COMMON-LISP))
+(CHK-FOR-SUITABILITY-OF-THIS-COMMON-LISP)
 
 ;                                   TYPES
 
-(EVAL-WHEN (COMPILE EVAL LOAD)
-(DEFCONSTANT *TYPE-SET-LENGTH* 31)
-)
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (DEFCONSTANT *TYPE-SET-LENGTH* 31))
 
 ;  In order to obtain greater efficiency in KCL, Bill Schelter has introduced
 ;  the following types and operations for type-sets and for controllers.
@@ -1934,7 +1902,7 @@ Robert S. Boyer and J Strother Moore
         (*PRINT-LENGTH* NIL)
         (*PRINT-CASE* :UPCASE))
     (INTERN (FORMAT NIL "~{~A~}" L)
-            'USER)))
+            :NQTHM)))
 
 (DEFUN SUB-PAIR (L1 L2 X)
   (COND ((ITERATE FOR Z IN L2 AS Y IN L1 WHEN (EQUAL Y X)

@@ -1,4 +1,14 @@
 # nqthm
+
+I have made some small changes to facilitate bringing up nqthm easier,
+namely that it can be loaded using an ASDF system, and that it probably works
+on more Common Lisp implementations, including Steel Banks Common Lisp and
+Clozure Common Lisp.
+
+Nagle's introduction to nqthm follows.
+
+--------------------
+
 nqthm - the original Boyer-Moore theorem prover, from 1992
 
 This is the original Boyer-Moore theorem prover, developed from 1972 to 1992.

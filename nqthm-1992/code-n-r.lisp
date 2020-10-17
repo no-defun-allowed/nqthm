@@ -9,10 +9,7 @@
 
 ;  NQTHM Version 1992
 
-(IN-PACKAGE "USER")
-
-(EVAL-WHEN (LOAD EVAL COMPILE)
-           (CHK-BASE-AND-PACKAGE-1992 10 *PACKAGE*))
+(in-package :nqthm)
 
 (DEFUN NEGATE (TERM)
   (COND ((FALSE-NONFALSEP TERM)
@@ -287,6 +284,8 @@
                                           PROVE-FILE |does| |not| |handle| 
                                           |the| |character| (!PPR CHAR NIL)
                                           |.|))))))
+                 ;; This is just asking for trouble in Unicode.
+                 #+(or)
                  (COND ((MEMBER CHAR
                                 '(#\| ; comment
                                   #\o #\O ; octal
@@ -399,7 +398,7 @@
 
   (MULTIPLE-VALUE-BIND
    (SYMBOL INTERNEDP)
-   (FIND-SYMBOL (SYMBOL-NAME X) 'USER)
+   (FIND-SYMBOL (SYMBOL-NAME X) :nqthm)
    (AND INTERNEDP (EQ X SYMBOL))))
 
 (DEFUN ONE-WAY-UNIFY (TERM1 TERM2)
@@ -1584,7 +1583,7 @@ Beware:  this function is defined in nqthm.lisp.
     (LET ((EOF (CONS NIL NIL))
           (*READ-BASE* 10)
           (*READTABLE* (COPY-READTABLE NIL))
-          (*PACKAGE* (FIND-PACKAGE "USER")))
+          (*PACKAGE* (FIND-PACKAGE :NQTHM)))
       (LOOP
        (LET ((FORM (READ FILE NIL EOF)))
          (COND ((EQ EOF FORM) (RETURN NIL))
@@ -1814,7 +1813,7 @@ Beware:  this function is defined in nqthm.lisp.
 
   (LET*
       ((*READ-BASE* 10)
-       (*PACKAGE* (FIND-PACKAGE "USER"))
+       (*PACKAGE* (FIND-PACKAGE :nqthm))
        (PROVED-FILE-NAME (EXTEND-FILE-NAME INFILE-ROOT FILE-EXTENSION-PROVED))
        (EVENT-FILE-NAME (EXTEND-FILE-NAME INFILE-ROOT FILE-EXTENSION-EVENTS))
        (STARTED-FILE-NAME (EXTEND-FILE-NAME INFILE-ROOT

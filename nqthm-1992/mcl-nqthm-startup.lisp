@@ -24,7 +24,7 @@ the Nqthm file "basis.lisp".
   (load (format nil "~anqthm.lisp" temp))
   (format t "~%Finished loading nqthm.lisp~%")
   (format t "~%Setting *default-nqthm-path* to ~a.~%"
-          (set (intern "*DEFAULT-NQTHM-PATH*" "USER")
+          (set (intern "*DEFAULT-NQTHM-PATH*" "NQTHM")
                (namestring temp))))
 
 ; We eval the next form only to avoid getting an error report when we load this
