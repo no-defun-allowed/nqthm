@@ -23,6 +23,7 @@
 
 |#
 
+(in-package :nqthm)
 (BOOT-STRAP NQTHM)
 (COMPILE-UNCOMPILED-DEFNS "tmp")
 (ADD-SHELL ZN NIL ZNP ((POS (ONE-OF NUMBERP)

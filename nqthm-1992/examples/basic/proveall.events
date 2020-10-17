@@ -24,6 +24,7 @@
  POSSIBILITY OF SUCH DAMAGES, OR FOR ANY CLAIM BY ANY OTHER PARTY.
 
 |#
+(in-package :nqthm)
 
 (BOOT-STRAP NQTHM)
 (COMPILE-UNCOMPILED-DEFNS "tmp")
@@ -172,9 +173,7 @@
               (LIST (QUOTE PLUS)
                     (CAR L)
                     (PLUS-TREE (CDR L)))))))
-(DEFN
-  CANCEL
-  (X)
+(DEFN CANCEL (X)
   (IF
     (AND (LISTP X)
          (EQUAL (CAR X)

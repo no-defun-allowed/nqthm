@@ -104,10 +104,8 @@
     NIL))
 
 
-(DEFUN IO1 NIL
-
+(DEFUN IO1 ()
 ;   This function is FUNCALLed and therefore may not be made a MACRO.
-
   (PROG
    (SO-NEXT-CONSIDER ACCUMS CROSS DEFNS DIR ELIM-LEMMAS GEN-LEMMAS HIGH-CNT
                      INDENT KEEP LEMMAS LST MASS MERGED-CAND-CNT N NAME NAMES
@@ -118,12 +116,12 @@
          (PQUOTE
           (PROGN
             (COND ((EQ LAST-PROCESS (QUOTE POP))
-                   |.|)) CR CR CR |#|
+                   "."))
+            CR CR CR "#"
             (COND ((NOT (EQ LAST-PROCESS (QUOTE STORE-SENT)))
-                   (? (|so| |next| |consider|)
-                      (|so| |let| |us| |turn| |our| |attention|
-                            |to|)
-                      (|so| |we| |now| |return| |to|))
+                   (? ("so next consider")
+                      ("so let us turn our attention to")
+                      ("so now we return to"))
                    |:| CR CR (!CLAUSE-SET CL-SET INDENT)
                    (? (|,| CR CR |named|)
                       (|,| CR CR |which| |we| |named|)
@@ -1089,7 +1087,9 @@
 (DEFUN PRINEVAL (FORM *ALIST* *INDENT* *FILE*) (PRINEVAL1 FORM))
 
 (DEFUN PRINEVAL1 (*FORM*)
-  (COND ((ATOM *FORM*)
+  (COND ((stringp *form*)
+         (prin5* *form*))
+        ((ATOM *FORM*)
          (PRIN5* (COND ((INTEGERP *FORM*) (SPELL-NUMBER *FORM*))
                        (T *FORM*))))
         (T (CASE (CAR *FORM*)

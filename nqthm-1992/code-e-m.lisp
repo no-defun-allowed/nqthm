@@ -2664,8 +2664,8 @@
                           :DIRECTION :OUTPUT
                           :IF-EXISTS :RENAME-AND-DELETE))
     (FORMAT PROP-FILE
-            ";;; -*-  Mode: Lisp; Package: USER; Syntax: Common-Lisp; ~
-            Base: 10 -*- ;;;; ~%(IN-PACKAGE \"USER\")~2%")
+            ";;; -*-  Mode: Lisp; Package: NQTHM; Syntax: Common-Lisp; ~
+            Base: 10 -*- ;;;; ~%(in-package :nqthm)~2%")
 
     (SETQ PROP-FILE-NAME
           (NAMESTRING (TRUENAME PROP-FILE)))
@@ -2677,9 +2677,6 @@
     (PRINC PROP-FILE-NAME PROP-FILE)
     (TERPRI PROP-FILE)
     (TERPRI PROP-FILE)
-    (PRINC "(EVAL-WHEN (LOAD EVAL COMPILE)
-           (CHK-BASE-AND-PACKAGE-1992 10 *PACKAGE*))"
-           PROP-FILE)
     (TERPRI PROP-FILE)
     (PRINT (LIST (QUOTE INIT-LIB) (KWOTE LIB-PROPS) (KWOTE LIB-VARS))
            PROP-FILE)
@@ -2730,23 +2727,20 @@
                         :DIRECTION :OUTPUT
                         :IF-EXISTS :RENAME-AND-DELETE))
     (FORMAT FN-FILE
-            ";;; -*-  Mode: Lisp; Package: USER; Syntax: Common-Lisp; Base: ~
-             10 -*- ;;;; ~%(IN-PACKAGE \"USER\")~2%")
+            ";;; -*-  Mode: Lisp; Package: NQTHM; Syntax: Common-Lisp; Base: ~
+             10 -*- ;;;; ~%(in-package :nqthm)~2%")
     (SETQ FN-FILE-NAME
           (NAMESTRING (TRUENAME FN-FILE)))
     (TERPRI FN-FILE)
-    (PRINC (QUOTE |;   Creation date:  |) FN-FILE)
+    (PRINC ";   Creation date:  " FN-FILE)
     (PRINT-IDATE DATE FN-FILE)
     (TERPRI FN-FILE)
-    (PRINC (QUOTE |;   Created as:  |) FN-FILE)
+    (PRINC ";   Created as:  " FN-FILE)
     (PRINC FN-FILE-NAME FN-FILE)
     (TERPRI FN-FILE)
     (PRINC (QUOTE |;   Associated file:  |) FN-FILE)
     (PRINC PROP-FILE-NAME FN-FILE)
     (TERPRI FN-FILE)
-    (PRINC "(EVAL-WHEN (LOAD EVAL COMPILE)
-           (CHK-BASE-AND-PACKAGE-1992 10 *PACKAGE*))"
-           FN-FILE)
     (TERPRI FN-FILE)
     (PRINT `(COND ((NOT (EQUAL LIB-DATE ,DATE))
                    (ERROR1 (QUOTE (PROGN |Attempt| |to| |load| |the|

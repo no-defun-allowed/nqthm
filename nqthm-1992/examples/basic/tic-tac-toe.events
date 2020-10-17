@@ -22,7 +22,7 @@
  SUCH DAMAGES, OR FOR ANY CLAIM BY ANY OTHER PARTY.
 
 |#
-
+(in-package :nqthm)
 (boot-strap nqthm)
 
 (defn boardp (x)

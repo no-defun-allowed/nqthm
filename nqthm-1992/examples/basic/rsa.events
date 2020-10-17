@@ -25,6 +25,7 @@
 
 |#
 
+(in-package :nqthm)
 (NOTE-LIB "proveall" T)
 (COMPILE-UNCOMPILED-DEFNS "tmp")
 (DISABLE EUCLID)
