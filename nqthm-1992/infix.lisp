@@ -169,19 +169,16 @@ separated by parentheses and commas.
 
 (in-package :nqthm)
 
-(EVAL-WHEN (LOAD EVAL COMPILE)
-           (CHK-BASE-AND-PACKAGE-1992 10 *PACKAGE*))
-
 ;                             STANDARD OUTPUT USED
 
 ; Printing.  We do *all* of our printing of formulas to *standard-output*, so
 ; we call princ and write-char on just one argument, the thing to be printed.
 
 
-(eval-when (load eval compile)
-           (or (boundp 'file-extension-events)
-               (error "~%~%infix.lisp is to be compiled and used with Nqthm versions 1992 or later,~%~
-                       not stand-alone or with older versions of Nqthm.~%")))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (or (boundp 'file-extension-events)
+      (error "~%~%infix.lisp is to be compiled and used with Nqthm versions 1992 or later,~%~
+              not stand-alone or with older versions of Nqthm.~%")))
 
 
 ;                                   PRINTING
@@ -2005,6 +2002,7 @@ need quoting or balancing.
   (let ((infl (extend-file-name fl file-extension-events))
         (outfl (extend-file-name fl (if nq "nqtex" "tex")))
         (a-very-rare-cons (cons nil nil))
+        (*package* (find-package :nqthm))
         (*print-pretty* nil)
         (*top-parens-eliminable* t)
         (*readtable* (copy-readtable nil))
@@ -2027,7 +2025,8 @@ need quoting or balancing.
 
           (or suppress-prelude
               (pformat *standard-output*
-                       "\\documentstyle[makeidx]{article}~%~
+                       "\\documentclass{article}~%~
+               \\usepackage{makeidx}~%~
                \\makeindex~%~
                %\\setlength{\\oddsidemargin}{.5in}~%~
                %\\setlength{\\evensidemargin}{.5in}~%~
@@ -2397,7 +2396,7 @@ need quoting or balancing.
                         :if-exists :rename-and-delete)
      (pprinc
 
-       "\\documentstyle{article} \\begin{document} 
+       "\\documentclass{article} \\begin{document} 
 
         Here is a summary of the conventional syntax in terms of the official syntax
         of the Nqthm logic.
