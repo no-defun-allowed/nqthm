@@ -226,7 +226,7 @@ separated by parentheses and commas.
 ; them special, but the Allegro compiler objected.
 
 (defvar *atom-alist*)
-(defvar *fn-alist*)
+(defvar *fn-table*)
 (defvar *event-printer-alist*)
 
 ; *top-parens-eliminable* is a special that is bound to t whenever, in printing
@@ -338,16 +338,16 @@ default, includes equal, lessp, leq, greaterp, geq, member, implies, iff,
 difference, quotient remainder, union, plus, times, and, and or.  |#
 
 (defmacro pprinc (x)
-  `(or *testing* (princ ,x)))
+  `(unless *testing* (princ ,x)))
 
 (defmacro pprin1 (x)
-  `(or *testing* (prin1 ,x)))
+  `(unless *testing* (prin1 ,x)))
 
 (defmacro pformat (&rest x)
-  `(or *testing* (format ,@x)))
+  `(unless *testing* (format ,@x)))
 
 (defmacro pwrite-char (x)
-  `(or *testing* (write-char ,x)))
+  `(unless *testing* (write-char ,x)))
 
 ; It is absolutely desireable that any printing done by any function inside this
 ; file, within the scope of a tabbing environment, be done with with pprinci,
@@ -386,12 +386,13 @@ difference, quotient remainder, union, plus, times, and, and or.  |#
 
   (or (symbolp fn)
       (error "Illegal function symbol name: ~a." fn))
-  (iterate for lst in '(*infix-ops* *unary-prefix-ops* *unary-suffix-ops* *unary-abs-ops*) do
-           (set lst (remove fn (eval lst))))
-  (iterate for alist in '(*fn-alist* *negative-infix-table* *negative-unary-prefix-table*
-                                     *negative-unary-suffix-table* *prefix-multiple-ops*
-                                     *infix-multiple-ops*) do
-           (set alist (iterate for pair in (eval alist) unless (eq fn (car pair)) collect pair))))
+  (loop for lst in '(*infix-ops* *unary-prefix-ops* *unary-suffix-ops* *unary-abs-ops*)
+        do (set lst (remove fn (eval lst))))
+  (loop for alist in '(*negative-infix-table* *negative-unary-prefix-table*
+                       *negative-unary-suffix-table* *prefix-multiple-ops*
+                       *infix-multiple-ops*)
+        do (set alist (iterate for pair in (eval alist) unless (eq fn (car pair)) collect pair)))
+  (remhash fn *fn-table*))  
 
 (defmacro make-infix-op (name str &optional neg-str)
   (let ((fn-name (intern (format nil "~s-infix-op-printer" name))))
@@ -402,8 +403,7 @@ difference, quotient remainder, union, plus, times, and, and or.  |#
          (default-infix-printer
            term
            ,(format nil "$~a$" str)))
-       (push (list ',name (function ,fn-name))
-             *fn-alist*)
+       (setf (gethash ',name *fn-table*) #',fn-name)
        (push ',name *infix-ops*)
        ,(cond (neg-str `(push (list ',name ',(format nil "$~a$" neg-str))
                               *negative-infix-table*)))
@@ -419,8 +419,7 @@ difference, quotient remainder, union, plus, times, and, and or.  |#
            term
            ',(iterate for str in strs collect
                       (format nil "$~a$" str))))
-       (push (list ',name (function ,fn-name))
-             *fn-alist*)
+       (setf (gethash ',name *fn-table*) #',fn-name)
        (push (cons ',name ,(length strs)) *infix-multiple-ops*)
        ',name)))
 
@@ -434,8 +433,7 @@ difference, quotient remainder, union, plus, times, and, and or.  |#
            term
            ',(iterate for str in strs collect
                       (format nil "$~a$" str))))
-       (push (list ',name (function ,fn-name))
-             *fn-alist*)
+       (setf (gethash ',name *fn-table*) #',fn-name)
        (push (cons ',name ,(length strs)) *prefix-multiple-ops*)
        ',name)))
                  
@@ -448,8 +446,7 @@ difference, quotient remainder, union, plus, times, and, and or.  |#
          (default-unary-prefix-printer
            term
            ,(format nil "$~a$" str)))
-       (push (list ',name (function ,fn-name))
-             *fn-alist*)
+       (setf (gethash ',name *fn-table*) #',fn-name)
        (push ',name *unary-prefix-ops*)
        ,(cond (neg-str `(push (list ',name ',(format nil "$~a$" neg-str))
                               *negative-unary-prefix-table*)))
@@ -464,8 +461,7 @@ difference, quotient remainder, union, plus, times, and, and or.  |#
          (default-unary-suffix-printer
            term
            ,(format nil "$~a$" str)))
-       (push (list ',name (function ,fn-name))
-             *fn-alist*)
+       (setf (gethash ',name *fn-table*) #',fn-name)
        (push ',name *unary-suffix-ops*)
        ,(cond (neg-str `(push (list ',name ',(format nil "$~a$" neg-str))
                               *negative-unary-suffix-table*)))
@@ -481,8 +477,7 @@ difference, quotient remainder, union, plus, times, and, and or.  |#
            term
            ,(format nil "$~a$" lhs-str)
            ,(format nil "$~a$" rhs-str)))
-       (push (list ',name (function ,fn-name))
-             *fn-alist*)
+       (setf (gethash ',name *fn-table*) #',fn-name)
        (push ',name *unary-abs-ops*)
        ',name)))
 
@@ -552,11 +547,14 @@ difference, quotient remainder, union, plus, times, and, and or.  |#
 ; We want to slashify special Tex characters in the following three lists in
 ; case they appear in an Nqthm symbol.  Used only by print-atom and index.
 
-(defconstant tex-special-chars (coerce "#$%&~_^\\{}" 'list))
+(alexandria:define-constant tex-special-chars (coerce "#$%&~_^\\{}" 'list)
+  :test #'equal)
 
-(defconstant tex-other-chars (coerce "<>|" 'list))
+(alexandria:define-constant tex-other-chars (coerce "<>|" 'list)
+  :test #'equal)
 
-(defconstant latex-index-specials (coerce "@|!\"" 'list))
+(alexandria:define-constant latex-index-specials (coerce "@|!\"" 'list)
+  :test #'equal)
 
 ; We also to handle the characters in tex-other-chars specially, by going into
 ; math mode, since slashification with backslash does not work.
@@ -1021,24 +1019,23 @@ difference, quotient remainder, union, plus, times, and, and or.  |#
 ; We would like to put this at the top but have to put it after the functions
 ; are defined.
 
-(defparameter *fn-alist*
-  (list (list 'quote (function quote-printer))
-        (list *infix-backquote* (function backquote-printer))
-        (list *infix-radix* (function *infix-radix*-printer))
-        (list 'if    (function if-printer))
-        (list 'let   (function let-printer))
-        (list 'cond  (function cond-printer))
-        (list 'case  (function case-printer))
-        (list 'for   (function for-printer))
-        (list 'forall (function forall-printer))
-        (list 'exists (function exists-printer))))
+(defparameter *fn-table*
+  (alexandria:alist-hash-table
+   (list (cons 'quote #'quote-printer)
+         (cons *infix-backquote* #'backquote-printer)
+         (cons *infix-radix* #'*infix-radix*-printer)
+         (cons 'if    #'if-printer)
+         (cons 'let   #'let-printer)
+         (cons 'cond  #'cond-printer)
+         (cons 'case  #'case-printer)
+         (cons 'for   #'for-printer)
+         (cons 'forall #'forall-printer)
+         (cons 'exists #'exists-printer))))
 
 (defun get-fn-printer (sym)
-  (or (symbolp sym)
-      (error "Illegal object where function symbol expected: ~a." sym))
-  (let ((a (assoc sym *fn-alist*)))
-    (cond (a (cadr a))
-          (t (function default-fn-printer)))))
+  (unless (symbolp sym)
+    (error "Illegal object where function symbol expected: ~a." sym))
+  (gethash sym *fn-table* #'default-fn-printer))
 
 (defun default-fn-printer (term)
 
@@ -1736,40 +1733,42 @@ need quoting or balancing.
     (pformat *standard-output* "Give the Nqthm control variable {\\tt ~a} the value {\\tt ~s}." name value))
   (no-tab-event-trailer))
 
+(defun in-package-printer (term)
+  (declare (ignore term)))
+
 ; We would like to put this at the top.
 
 (defparameter *event-printer-alist*
-  (list (list 'setq (function setq-printer))
-        (list 'deftheory (function deftheory-printer))
-        (list 'disable-theory (function disable-theory-printer))
-        (list 'enable-theory (function enable-theory-printer))
-        (list 'set-status (function set-status-printer))
-        (list 'ubt (function ubt-printer))
-        (list 'toggle-defined-functions (function toggle-defined-functions-printer))
-        (list 'toggle (function toggle-printer))
-        (list 'add-shell (function add-shell-printer))
-        (list 'dcl (function dcl-printer))
-        (list 'disable (function disable-printer))
-        (list 'enable (function enable-printer))
-        (list 'prove-lemma (function prove-lemma-printer))
-        (list 'lemma (function prove-lemma-printer))
-        (list 'add-axiom (function add-axiom-printer))
-        (list 'axiom (function add-axiom-printer))
-        (list 'constrain (function constrain-printer))
-        (list 'functionally-instantiate (function prove-lemma-printer))
-        (list 'defn (function defn-printer))
-        (list 'defn-sk (function defn-sk-printer))
-        (list 'defn-sk+ (function defn-sk-printer))
-        (list 'compile-uncompiled-defns (function compile-uncompiled-defns-printer)) 
-        (list 'boot-strap (function boot-strap-printer))
-        (list 'note-lib (function note-lib-printer))
-        (list 'make-lib (function make-lib-printer))))
+  (alexandria:alist-hash-table
+   (list (cons 'in-package #'in-package-printer)
+         (cons 'setq #'setq-printer)
+         (cons 'deftheory #'deftheory-printer)
+         (cons 'disable-theory #'disable-theory-printer)
+         (cons 'enable-theory #'enable-theory-printer)
+         (cons 'set-status #'set-status-printer)
+         (cons 'ubt #'ubt-printer)
+         (cons 'toggle-defined-functions #'toggle-defined-functions-printer)
+         (cons 'toggle #'toggle-printer)
+         (cons 'add-shell #'add-shell-printer)
+         (cons 'dcl #'dcl-printer)
+         (cons 'disable #'disable-printer)
+         (cons 'enable #'enable-printer)
+         (cons 'prove-lemma #'prove-lemma-printer)
+         (cons 'lemma #'prove-lemma-printer)
+         (cons 'add-axiom #'add-axiom-printer)
+         (cons 'axiom #'add-axiom-printer)
+         (cons 'constrain #'constrain-printer)
+         (cons 'functionally-instantiate #'prove-lemma-printer)
+         (cons 'defn #'defn-printer)
+         (cons 'defn-sk #'defn-sk-printer)
+         (cons 'defn-sk+ #'defn-sk-printer)
+         (cons 'compile-uncompiled-defns #'compile-uncompiled-defns-printer) 
+         (cons 'boot-strap #'boot-strap-printer)
+         (cons 'note-lib #'note-lib-printer)
+         (cons 'make-lib #'make-lib-printer))))
 
 (defun get-event-printer (sym)
-  (let ((a (assoc sym *event-printer-alist*)))
-    (cond (a (cadr a))
-          (t (function default-event-printer)))))
-
+  (gethash sym *event-printer-alist* #'default-event-printer))
 
 ;                           COPY COMMENTS
 
@@ -1911,7 +1910,7 @@ need quoting or balancing.
                (or *do-not-use-tabs* (end-tabbing))
                nil))
            (pformat *terminal-io* "~%Sorry.  Exceeded Latex tabbing limit.~%
-                                ~%Use the normal pretty printer on that one.~%~%"
+                                ~%Use the normal pretty printer on ~s.~%~%"
                    form))))
   nil)
 
@@ -2502,12 +2501,10 @@ need quoting or balancing.
               term
               *neg-str*)))))
 
-(eval-when (load eval compile)
-           (or (not (boundp '*fn-alist*))
-               (assoc 'not *fn-alist*)
-               (push (list 'not (function not-printer))
-                     *fn-alist*))
-           'not)
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (when (boundp '*fn-table*)
+    (setf (gethash 'not *fn-table*) #'not-printer))
+  'not)
 
 
 ;                          USER MODIFIABLE TABLE SETUP
