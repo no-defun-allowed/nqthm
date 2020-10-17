@@ -1,3 +1,5 @@
 *~
 *.fas
+*.fasl
 *.lib
+nqthm-1992/tmp.lisp
